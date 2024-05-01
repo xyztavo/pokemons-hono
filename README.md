@@ -64,8 +64,10 @@ db:seed
 - [x] add pagination to that shit
 - [x] create a way to query pokemon
 - [x] add count to pokemons and maxpages
-- [ ] create typelist many to many
-- [ ] create a way to connect type to typelist to pokemon
+- [x] create typelist many to many
+- [x] create a way to connect type to typelist to pokemon
+- [ ] create typelist to pokemons
+- [ ] paginate user pokemons 
 - [ ] swagger
 
 ## Known bugs
