@@ -10,22 +10,37 @@ export const users = sqliteTable("user", {
   createdAt: text("created_at").default(sql`(current_timestamp)`),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
-  pokemons: many(pokemons),
-}))
 
 export const pokemons = sqliteTable("pokemons", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
-  typeList: text("type_list")
+})
+
+export const userPokemons = sqliteTable("user_pokemons", {
+  userId: text("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  pokemonsId: integer("pokemon_id").references(() => pokemons.id, { onDelete: 'cascade' }).primaryKey()
+})
+
+export const pokemonsTypelist = sqliteTable("pokemons_typelist", {
+  pokemonId: text("pokemon_id").references(() => pokemons.id, { onDelete: "cascade" }),
+  typeId: integer("type_id").references(() => typeList.id, { onDelete: 'cascade' }).primaryKey()
+})
+
+export const typeList = sqliteTable("type_list", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type")
 })
 
 export const pokemonsRelations = relations(pokemons, ({ many }) => ({
   users: many(users),
+  typeList: many(typeList),
 }));
 
-export const userPokemons = sqliteTable("user_pokemons", {
-  userId: text("user_id").references(() => users.id, { onDelete: 'cascade'}),
-  pokemonsId: integer("pokemon_id").references(() => pokemons.id, { onDelete: 'cascade' }).primaryKey()
-})
+export const typeListRelations = relations(typeList, ({ many }) => ({
+  pokemons: many(pokemons),
+}));
 
+
+export const usersRelations = relations(users, ({ many }) => ({
+  pokemons: many(pokemons),
+}))
