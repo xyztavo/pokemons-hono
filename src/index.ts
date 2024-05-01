@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { userRoute } from './routes/users'
+import { pokemonRoute } from './routes/pokemon'
 
 const app = new Hono()
 
@@ -11,5 +12,6 @@ app.get('/', (c) => {
 })
 
 app.route('/user', userRoute)
+app.route('/pokemon', pokemonRoute)
 
 export default app
