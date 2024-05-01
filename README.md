@@ -1,3 +1,9 @@
+# Hono Pokémons
+Simple project that uses some cool tech
+- [Cloudfare Workers](https://workers.cloudflare.com/)
+- [Hono](https://hono.dev/)
+- [Turso DB](https://turso.tech/)
+- [Drizzle ORM](https://orm.drizzle.team/)
 ## Setup enviorment variables
 Go to [config.example.json](./config.example.json), add the [turso db url and token](https://turso.tech/) and remove the .example from the file.
 
