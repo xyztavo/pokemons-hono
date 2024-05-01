@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { buildTursoClient } from "../db/db";
 import { Env } from '../types/env';
-import { userPokemons, users, pokemons } from '../db/schema';
+import { userPokemons, users, pokemons, pokemonsTypelist, typeList } from '../db/schema';
 import bcrypt from 'bcryptjs'
 import { sign } from 'hono/jwt';
 import { sql, eq } from 'drizzle-orm';
@@ -14,12 +14,6 @@ import { getIdFromToken } from '../utils/getIdFromToken';
 
 export const userRoute = new Hono<{ Bindings: Env }>()
 
-// Get users
-userRoute.get('/', async (c) => {
-    const db = buildTursoClient(c.env)
-    const usersFromDb = await db.select().from(users)
-    return c.json({ usersFromDb })
-})
 
 
 
@@ -111,15 +105,34 @@ userRoute.get('/pokemon', auth, async (c) => {
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
 
-    const results = await db.select().from(users)
-        .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
-        .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id)).where(eq(users.id, idFromToken))
+    const results = await db.select({ users, pokemons, typeList }).from(users)
+        .innerJoin(userPokemons, eq(users.id, userPokemons.userId)).groupBy()
+        .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
+        .innerJoin(pokemonsTypelist, eq(pokemons.id, pokemonsTypelist.pokemonId))
+        .innerJoin(typeList, eq(pokemonsTypelist.typeId, typeList.id))
+        .where(eq(users.id, idFromToken))
 
-    const pokemonsResults = results.map((e) => e.pokemons)
+    const mergedResults = results.reduce((acc, curr) => {
+        const existingPokemonIndex = acc.findIndex(pokemon => pokemon.id === curr.pokemons.id);
+        if (existingPokemonIndex !== -1) {
+            if (curr.typeList.type !== null) { // Check if the type is not null
+                acc[existingPokemonIndex].types.push(curr.typeList.type);
+            }
+        } else {
+            const typesArray = [];
+            if (curr.typeList.type !== null) { // Check if the type is not null
+                typesArray.push(curr.typeList.type);
+            }
+            acc.push({
+                id: curr.pokemons.id,
+                name: curr.pokemons.name,
+                types: typesArray
+            });
+        }
+        return acc;
+    }, [] as { id: number; name: string; types: string[] }[]);
 
-    if (pokemonsResults.length < 1) return c.json({ message: "user got no pokemons" }, 400)
-
-    return c.json({ id: results[0]?.user.id, name: results[0]?.user.name, pokemons: pokemonsResults })
+    return c.json({ userid: results[0].users.id, username: results[0].users.name, pokemons: mergedResults })
 })
 
 // add pokemon to user
