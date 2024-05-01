@@ -59,9 +59,9 @@ db:seed
 - [x] create pokemons table
 - [x] seed pokemons with pokemons
 - [x] create many to many pokemons and user
-- [ ] create a pokemons url to get pokemons
-- [ ] add pagination to that shit
+- [x] create a way to connect a pokemon to a certain user
+- [x] create a pokemons url to get pokemons
+- [x] add pagination to that shit
 - [ ] create typelist many to many
 - [ ] create a way to connect type to typelist to pokemon
-- [ ] create a way to connect a pokemon to a certain user
 - [ ] swagger
