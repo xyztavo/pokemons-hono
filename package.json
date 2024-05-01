@@ -1,0 +1,29 @@
+{
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts",
+    "db:generate": "drizzle-kit generate:sqlite",
+    "db:push": "drizzle-kit push:sqlite",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed/seed.ts"
+  },
+  "dependencies": {
+    "@hono/swagger-ui": "^0.2.2",
+    "@hono/zod-openapi": "^0.11.0",
+    "@libsql/client": "^0.6.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.9",
+    "hono": "^4.2.7",
+    "nanoid": "^5.0.7",
+    "pg": "^8.11.5",
+    "tsx": "^4.7.3",
+    "zod": "^3.23.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240403.0",
+    "drizzle-kit": "^0.20.17",
+    "wrangler": "^3.47.0"
+  }
+}

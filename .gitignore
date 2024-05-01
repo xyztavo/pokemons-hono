@@ -1,0 +1,16 @@
+node_modules
+dist
+.env
+.env.local  
+
+.wrangler
+.dev.vars
+config.json
+wrangler.toml
+
+drizzle
+
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
