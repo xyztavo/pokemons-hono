@@ -69,4 +69,4 @@ db:seed
 - [ ] swagger
 
 ## Known bugs
-- [ ] if pokemons return exacts to a integer ex: /pokemon?query=ra&pageIndex=2 the maxPages is going to hallucinate
+- [x] if pokemons return exacts to a integer ex: /pokemon?query=ra&pageIndex=2 the maxPages is going to hallucinate
