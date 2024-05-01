@@ -25,7 +25,7 @@ export const pokemonsRelations = relations(pokemons, ({ many }) => ({
 }));
 
 export const userPokemons = sqliteTable("user_pokemons", {
-  userId: text("user_id").references(() => users.id),
+  userId: text("user_id").references(() => users.id, { onDelete: 'cascade'}),
   pokemonsId: integer("pokemon_id").references(() => pokemons.id, { onDelete: 'cascade' }).primaryKey()
 })
 
