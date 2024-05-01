@@ -63,6 +63,10 @@ db:seed
 - [x] create a pokemons url to get pokemons
 - [x] add pagination to that shit
 - [x] create a way to query pokemon
+- [x] add count to pokemons and maxpages
 - [ ] create typelist many to many
 - [ ] create a way to connect type to typelist to pokemon
 - [ ] swagger
+
+## Known bugs
+- [ ] if pokemons return exacts to a integer ex: /pokemon?query=ra&pageIndex=2 the maxPages is going to hallucinate
