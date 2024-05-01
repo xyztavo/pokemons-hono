@@ -122,7 +122,7 @@ userRoute.get('/pokemon', auth, async (c) => {
     return c.json({ id: results[0]?.user.id, name: results[0]?.user.name, pokemons: pokemonsResults })
 })
 
-//
+// add pokemon to user
 const addPokemonToUserBody = z.object({
     pokemonId: z.number()
 })
