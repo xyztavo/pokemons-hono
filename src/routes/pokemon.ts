@@ -27,7 +27,7 @@ pokemonRoute.get('/', async (c) => {
 
     const maxPokemons = Math.floor(pokemonsCount[0].count)
 
-    const maxPages = Math.floor(maxPokemons / maxResults)
+    const maxPages = Math.floor((maxPokemons / maxResults) - 0.01)
 
     if (pokemonsResults.length < 1) return c.json({ message: "theres no more pokemons" }, 404)
 
