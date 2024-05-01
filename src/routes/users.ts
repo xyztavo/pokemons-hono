@@ -117,9 +117,26 @@ userRoute.get('/pokemon', auth, async (c) => {
 
     const pokemonsResults = results.map((e) => e.pokemons)
 
-    if (pokemonsResults.length < 1) return c.json({message: "user got no pokemons"}, 400)
+    if (pokemonsResults.length < 1) return c.json({ message: "user got no pokemons" }, 400)
 
     return c.json({ id: results[0]?.user.id, name: results[0]?.user.name, pokemons: pokemonsResults })
+})
+
+//
+const addPokemonToUserBody = z.object({
+    pokemonId: z.number()
+})
+userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async (c) => {
+    const { pokemonId } = await c.req.json()
+    const db = buildTursoClient(c.env)
+    const idFromToken = getIdFromToken(c)
+
+    try {
+        await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: pokemonId })
+        return c.json({ message: 'pokemon added to user!' }, 201)
+    } catch (error) {
+        return c.json({ message: 'could not add pokemon' }, 500)
+    }
 })
 
 
