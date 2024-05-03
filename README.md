@@ -13,6 +13,11 @@ node command to generate a strong jwt secret:
 ```
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+instal wrangler
+
+```
+bun i wrangler --save-dev
+```
 
 add secrets to workers by running
 ```
