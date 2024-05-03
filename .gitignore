@@ -4,8 +4,11 @@ dist
 .env.local  
 
 .wrangler
+.wrangler.toml.example
 .dev.vars
+.dev.vars.example
 config.json
+config.example.json
 wrangler.toml
 
 drizzle

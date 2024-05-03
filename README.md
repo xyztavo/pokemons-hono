@@ -14,6 +14,15 @@ node command to generate a strong jwt secret:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+add secrets to workers by running
+```
+wrangler secret put TURSO_AUTH_TOKEN
+```
+then
+```
+wrangler secret put SECRET_JWT
+```
+
 Go to [wrangler.toml.example](./wrangler.toml.example) and add the turso [turso db url](https://turso.tech/)
 
 ## Push schema to your database and seed
