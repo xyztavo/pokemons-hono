@@ -47,18 +47,17 @@ userRoute.post('/', zValidator('json', newUserSchema), async (c) => {
 // Login User
 userRoute.post('/login', async (c) => {
     const db = buildTursoClient(c.env)
-
     const { email, password } = await c.req.json()
+
+    if (!email || !password) return c.json({ message: "either password or email not provided" }, 400)
 
     const existingUser = await db.select().from(users).where(eq(users.email, email))
 
-    try {
-        await bcrypt.compare(password, existingUser[0].password)
-    } catch (error) {
-        return c.json({ message: "password does not match" }, 401)
-    }
+    if (existingUser.length < 1) return c.json({ message: "user not found" }, 404)
 
+    const passwordMatch = bcrypt.compareSync(password, existingUser[0].password)
 
+    if (!passwordMatch) return c.json({ message: "password does not match"}, 401)
 
     const token = await sign(
         { name: existingUser[0].name, user_id: existingUser[0].id }, c.env.SECRET_JWT
