@@ -87,3 +87,4 @@ db:seed
 ## Known bugs
 - [x] if pokemons return exacts to a integer ex: /pokemon?query=ra&pageIndex=2 the maxPages is going to hallucinate
 - [x] when pokemon has typelist with more than 1 type, it takes the limit from pokemon, so maxPages isnt working 
+- [ ] pokemons query on users not working
