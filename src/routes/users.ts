@@ -4,12 +4,13 @@ import { Env } from '../types/env';
 import { userPokemons, users, pokemons, pokemonsTypelist, typeList } from '../db/schema';
 import bcrypt from 'bcryptjs'
 import { sign } from 'hono/jwt';
-import { sql, eq } from 'drizzle-orm';
+import { sql, eq, inArray, count, gt } from 'drizzle-orm';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator'
 import { auth } from '../middlewares/auth';
 import { nanoid } from 'nanoid';
 import { getIdFromToken } from '../utils/getIdFromToken';
+import { mergePokemonsFromResult } from './pokemon';
 
 
 export const userRoute = new Hono<{ Bindings: Env }>()
@@ -57,7 +58,7 @@ userRoute.post('/login', async (c) => {
 
     const passwordMatch = bcrypt.compareSync(password, existingUser[0].password)
 
-    if (!passwordMatch) return c.json({ message: "password does not match"}, 401)
+    if (!passwordMatch) return c.json({ message: "password does not match" }, 401)
 
     const token = await sign(
         { name: existingUser[0].name, user_id: existingUser[0].id }, c.env.SECRET_JWT
@@ -103,35 +104,39 @@ userRoute.get('/profile', auth, async (c) => {
 userRoute.get('/pokemon', auth, async (c) => {
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
+    const { pageIndex, query } = c.req.query()
 
-    const results = await db.select({ users, pokemons, typeList }).from(users)
-        .innerJoin(userPokemons, eq(users.id, userPokemons.userId)).groupBy()
+    const maxResults = 20
+    const page = Number(pageIndex) * maxResults
+
+
+    const pokemonsResults = await db.select().from(users)
+        .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
         .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
-        .innerJoin(pokemonsTypelist, eq(pokemons.id, pokemonsTypelist.pokemonId))
-        .innerJoin(typeList, eq(pokemonsTypelist.typeId, typeList.id))
         .where(eq(users.id, idFromToken))
+        .limit(maxResults)
+        .offset(page)
 
-    const mergedResults = results.reduce((acc, curr) => {
-        const existingPokemonIndex = acc.findIndex(pokemon => pokemon.id === curr.pokemons.id);
-        if (existingPokemonIndex !== -1) {
-            if (curr.typeList.type !== null) { // Check if the type is not null
-                acc[existingPokemonIndex].types.push(curr.typeList.type);
-            }
-        } else {
-            const typesArray = [];
-            if (curr.typeList.type !== null) { // Check if the type is not null
-                typesArray.push(curr.typeList.type);
-            }
-            acc.push({
-                id: curr.pokemons.id,
-                name: curr.pokemons.name,
-                types: typesArray
-            });
-        }
-        return acc;
-    }, [] as { id: number; name: string; types: string[] }[]);
+    const pokemonsWithTypelist = await db
+        .select()
+        .from(pokemonsTypelist)
+        .innerJoin(typeList, eq(typeList.id, pokemonsTypelist.typeId))
+        .where(inArray(pokemonsTypelist.pokemonId, pokemonsResults.map(m => m.pokemons.id.toString())));
 
-    return c.json({ userid: results[0].users.id, username: results[0].users.name, pokemons: mergedResults })
+        const pokemonsCount = await db
+        .select({ count: count(pokemons) })
+        .from(users)
+        .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
+        .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
+        .where(query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0));
+
+    if (pokemonsCount.length < 1) return c.json({ message: "no pokemons found" }, 404)
+
+    const maxPokemons = Math.floor(pokemonsCount[0].count)
+
+    const maxPages = Math.floor((maxPokemons / maxResults) - 0.01)
+
+    return c.json({ totalCount: pokemonsCount[0].count, maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
 })
 
 // add pokemon to user
@@ -149,6 +154,7 @@ userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async 
     } catch (error) {
         return c.json({ message: 'could not add pokemon' }, 500)
     }
+
 })
 
 
