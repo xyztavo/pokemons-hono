@@ -123,7 +123,7 @@ userRoute.get('/pokemon', auth, async (c) => {
         .innerJoin(typeList, eq(typeList.id, pokemonsTypelist.typeId))
         .where(inArray(pokemonsTypelist.pokemonId, pokemonsResults.map(m => m.pokemons.id.toString())));
 
-        const pokemonsCount = await db
+    const pokemonsCount = await db
         .select({ count: count(pokemons) })
         .from(users)
         .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
@@ -136,7 +136,7 @@ userRoute.get('/pokemon', auth, async (c) => {
 
     const maxPages = Math.floor((maxPokemons / maxResults) - 0.01)
 
-    return c.json({ totalCount: pokemonsCount[0].count, maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
+    return c.json({ totalCount: pokemonsCount[0].count, pageIndex, maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
 })
 
 // add pokemon to user
