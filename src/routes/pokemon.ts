@@ -53,13 +53,13 @@ pokemonRoute.get('/', async (c) => {
 
     const pokemonsCount = await db
         .select({ count: count(pokemons)})
-        .from(users).innerJoin(userPokemons, eq(users.id, userPokemons.userId)).innerJoin(pokemons, eq(pokemons.id, userPokemons.pokemonsId)).where(query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0));
+        .from(pokemons)
+        .where(query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0));
 
     if (pokemonsCount.length < 1) return c.json({ message: "no pokemons found" }, 404)
 
     const maxPokemons = Math.floor(pokemonsCount[0].count)
+    const maxPages = Math.floor(maxPokemons / maxResults)
 
-    const maxPages = Math.floor((maxPokemons / maxResults) - 0.01)
-
-    return c.json({ totalCount: pokemonsCount[0].count, maxPages, pokemons: mergePokemonsFromResult(pokemonsResults, pokemonsWithTypelist) })
+    return c.json({ totalCount: pokemonsCount[0].count, maxPages, pageIndex: Number(pageIndex ), pokemons: mergePokemonsFromResult(pokemonsResults, pokemonsWithTypelist) })
 })
