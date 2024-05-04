@@ -81,9 +81,9 @@ db:seed
 - [x] create typelist many to many
 - [x] create a way to connect type to typelist to pokemon
 - [x] create typelist to pokemons
-- [ ] paginate user pokemons 
+- [x] paginate user pokemons 
 - [ ] swagger
 
 ## Known bugs
 - [x] if pokemons return exacts to a integer ex: /pokemon?query=ra&pageIndex=2 the maxPages is going to hallucinate
-- [ ] when pokemon has typelist with more than 1 type, it takes the limit from pokemon, so maxPages isnt working 
+- [x] when pokemon has typelist with more than 1 type, it takes the limit from pokemon, so maxPages isnt working 
