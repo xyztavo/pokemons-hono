@@ -135,9 +135,9 @@ userRoute.get('/pokemon', auth, async (c) => {
     const maxPokemons = Math.floor(pokemonsCount[0].count)
 
     // TODO : figure out why i have to do a minus 1 right here
-    const maxPages = Math.floor((maxPokemons / maxResults) - 1)
+    const maxPages = Math.floor(maxPokemons / maxResults)
 
-    return c.json({ totalCount: pokemonsCount[0].count, pageIndex: Number(pageIndex), maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
+    return c.json({ user: pokemonsResults[0].user.name, totalCount: pokemonsCount[0].count, pageIndex: Number(pageIndex), maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
 })
 
 // add pokemon to user
@@ -151,7 +151,13 @@ userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async 
 
     try {
         await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: pokemonId })
-        return c.json({ message: 'pokemon added to user!' }, 201)
+
+        const pokeData = await db.select().from(pokemons).innerJoin(pokemonsTypelist, eq(pokemonsTypelist.pokemonId, pokemons.id)).innerJoin(typeList, eq(pokemonsTypelist.typeId, typeList.id)).where(eq(pokemons.id, pokemonId))
+        const typeListMerged = pokeData.map((poke) => poke.type_list.type)
+        return c.json({
+            message: 'pokemon added to user!',
+            pokemon: { name: pokeData[0].pokemons.name, id: pokeData[0].pokemons.id, typeList: typeListMerged }
+        }, 201)
     } catch (error) {
         return c.json({ message: 'could not add pokemon' }, 500)
     }
