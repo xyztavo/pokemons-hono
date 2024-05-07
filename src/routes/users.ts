@@ -134,9 +134,10 @@ userRoute.get('/pokemon', auth, async (c) => {
 
     const maxPokemons = Math.floor(pokemonsCount[0].count)
 
-    const maxPages = Math.floor((maxPokemons / maxResults) - 0.01)
+    // TODO : figure out why i have to do a minus 1 right here
+    const maxPages = Math.floor((maxPokemons / maxResults) - 1)
 
-    return c.json({ totalCount: pokemonsCount[0].count, pageIndex, maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
+    return c.json({ totalCount: pokemonsCount[0].count, pageIndex: Number(pageIndex), maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
 })
 
 // add pokemon to user
