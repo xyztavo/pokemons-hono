@@ -4,7 +4,7 @@ import { Env } from '../types/env';
 import { userPokemons, users, pokemons, pokemonsTypelist, typeList } from '../db/schema';
 import bcrypt from 'bcryptjs'
 import { sign } from 'hono/jwt';
-import { sql, eq, inArray, count, gt, and } from 'drizzle-orm';
+import { sql, eq, inArray, count, gt, and, asc } from 'drizzle-orm';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator'
 import { auth } from '../middlewares/auth';
@@ -116,6 +116,7 @@ userRoute.get('/pokemon', auth, async (c) => {
             .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
             .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
             .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)))
+            .orderBy(pokemons.id, asc(pokemons.id))
             .limit(maxResults)
             .offset(page)
 
