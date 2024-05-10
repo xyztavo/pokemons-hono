@@ -4,7 +4,7 @@ import { Env } from '../types/env';
 import { userPokemons, users, pokemons, pokemonsTypelist, typeList } from '../db/schema';
 import bcrypt from 'bcryptjs'
 import { sign } from 'hono/jwt';
-import { sql, eq, inArray, count, gt, and  } from 'drizzle-orm';
+import { sql, eq, inArray, count, gt, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator'
 import { auth } from '../middlewares/auth';
@@ -110,18 +110,20 @@ userRoute.get('/pokemon', auth, async (c) => {
     const page = Number(pageIndex) * maxResults
 
 
-    const pokemonsResults = await db.select().from(users)
-        .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
-        .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
-        .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)))
-        .limit(maxResults)
-        .offset(page)
+    const pokemonsResults = await
+        db.select()
+            .from(users)
+            .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
+            .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
+            .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)))
+            .limit(maxResults)
+            .offset(page)
 
-    const pokemonsWithTypelist = await db
-        .select()
-        .from(pokemonsTypelist)
-        .innerJoin(typeList, eq(typeList.id, pokemonsTypelist.typeId))
-        .where(inArray(pokemonsTypelist.pokemonId, pokemonsResults.map(m => m.pokemons.id.toString())));
+    const pokemonsWithTypelist = await
+        db.select()
+            .from(pokemonsTypelist)
+            .innerJoin(typeList, eq(typeList.id, pokemonsTypelist.typeId))
+            .where(inArray(pokemonsTypelist.pokemonId, pokemonsResults.map(m => m.pokemons.id.toString())));
 
     const pokemonsCount = await db
         .select({ count: count(pokemons) })
@@ -149,19 +151,64 @@ userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async 
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
 
-    try {
-        await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: pokemonId })
+    await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: pokemonId })
 
-        const pokeData = await db.select().from(pokemons).innerJoin(pokemonsTypelist, eq(pokemonsTypelist.pokemonId, pokemons.id)).innerJoin(typeList, eq(pokemonsTypelist.typeId, typeList.id)).where(eq(pokemons.id, pokemonId))
+    const pokeData = await
+        db
+            .select()
+            .from(pokemons)
+            .innerJoin(pokemonsTypelist, eq(pokemonsTypelist.pokemonId, pokemons.id))
+            .innerJoin(typeList, eq(pokemonsTypelist.typeId, typeList.id))
+            .where(eq(pokemons.id, pokemonId))
+
+    const typeListMerged = pokeData.map((poke) => poke.type_list.type)
+
+    return c.json({
+        message: 'pokemon added to user!',
+        pokemon: { name: pokeData[0].pokemons.name, id: pokeData[0].pokemons.id, typeList: typeListMerged }
+    }, 201)
+
+
+})
+
+userRoute.put('/pokemon/random', auth, async (c) => {
+    const userId = getIdFromToken(c)
+    const db = buildTursoClient(c.env)
+
+    const results = await
+        db.select()
+            .from(users)
+            .innerJoin(userPokemons, eq(userPokemons.userId, users.id))
+            .where(eq(users.id, userId))
+
+
+    function getRandomNumberExcluding(min: number, max: number, excluded: number[]) {
+        let randomNumber;
+        do {
+            randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+        } while (excluded.includes(randomNumber));
+        return randomNumber;
+    }
+    const excluded = results.map((e) => e.user_pokemons.pokemonsId);
+
+    const randomNumber = getRandomNumberExcluding(1, 649, excluded);
+
+    try {
+        await db.insert(userPokemons).values({ userId, pokemonsId: randomNumber })
+        const pokeData = await
+            db
+                .select()
+                .from(pokemons)
+                .innerJoin(pokemonsTypelist, eq(pokemonsTypelist.pokemonId, pokemons.id))
+                .innerJoin(typeList, eq(pokemonsTypelist.typeId, typeList.id)).where(eq(pokemons.id, randomNumber))
         const typeListMerged = pokeData.map((poke) => poke.type_list.type)
+
         return c.json({
             message: 'pokemon added to user!',
             pokemon: { name: pokeData[0].pokemons.name, id: pokeData[0].pokemons.id, typeList: typeListMerged }
         }, 201)
     } catch (error) {
-        return c.json({ message: 'could not add pokemon' }, 500)
+        return c.json({ message: `could not add pokemon with id ${randomNumber}`, excluded }, 500)
     }
-
 })
-
 

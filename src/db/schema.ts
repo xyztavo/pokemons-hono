@@ -17,13 +17,14 @@ export const pokemons = sqliteTable("pokemons", {
 })
 
 export const userPokemons = sqliteTable("user_pokemons", {
+  userPokemonsId: integer("user_pokemons_id").primaryKey({ autoIncrement: true }),
   userId: text("user_id").references(() => users.id, { onDelete: 'cascade' }),
-  pokemonsId: integer("pokemon_id").references(() => pokemons.id, { onDelete: 'cascade' }).primaryKey()
+  pokemonsId: integer("pokemon_id").references(() => pokemons.id, { onDelete: 'cascade' })
 })
 
 export const pokemonsTypelist = sqliteTable("pokemons_typelist", {
   pokemonId: text("pokemon_id").references(() => pokemons.id, { onDelete: "cascade" }),
-  typeId: integer("type_id").references(() => typeList.id, { onDelete: 'cascade' }).primaryKey()
+  typeId: integer("type_id").references(() => typeList.id, { onDelete: 'cascade' })
 })
 
 export const typeList = sqliteTable("type_list", {
