@@ -6,22 +6,15 @@ import { cors } from 'hono/cors'
 
 const app = new Hono()
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://pokedoro-next.vercel.app'],
     allowHeaders: ['Authorization', 'Content-Type', 'Upgrade-Insecure-Requests'],
     allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT'],
     exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
     maxAge: 600,
     credentials: true,
-}))
+}
+))
 
-app.use(cors({
-    origin: 'https://pokedoro-next.vercel.app',
-    allowHeaders: ['Authorization', 'Content-Type', 'Upgrade-Insecure-Requests'],
-    allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT'],
-    exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
-    maxAge: 600,
-    credentials: true,
-}))
 
 app.get('/', (c) => {
     return c.json({
