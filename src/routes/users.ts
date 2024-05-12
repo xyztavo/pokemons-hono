@@ -152,12 +152,11 @@ userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async 
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
 
-    // check if user already has pokemon
+    await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: pokemonId })
+
     const existingUserPokemonQuery = await db.select().from(users).innerJoin(userPokemons, eq(userPokemons.userId, users.id)).where(eq(users.id, idFromToken))
     const existingUserPokemon = existingUserPokemonQuery[0].user_pokemons.pokemonsId
-    if (existingUserPokemon == pokemonId) return c.json({ message: "user already has this pokemon"}, 403)
-
-    await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: pokemonId })
+    if (existingUserPokemon == pokemonId) return c.json({ message: "user already has this pokemon" }, 403)
 
     const pokeData = await
         db
@@ -199,10 +198,10 @@ userRoute.put('/pokemon/random', auth, async (c) => {
 
     const randomNumber = getRandomNumberExcluding(1, 649, excluded);
 
-       // check if user already has pokemon
-       const existingUserPokemonQuery = await db.select().from(users).innerJoin(userPokemons, eq(userPokemons.userId, users.id)).where(eq(users.id, idFromToken))
-       const existingUserPokemonId = existingUserPokemonQuery[0].user_pokemons.pokemonsId
-       if (existingUserPokemonId == randomNumber) return c.json({ message: "user already has this pokemon"}, 403)
+    //    // check if user already has pokemon
+    //    const existingUserPokemonQuery = await db.select().from(users).innerJoin(userPokemons, eq(userPokemons.userId, users.id)).where(eq(users.id, idFromToken))
+    //    const existingUserPokemonId = existingUserPokemonQuery[0].user_pokemons.pokemonsId
+    //    if (existingUserPokemonId == randomNumber) return c.json({ message: "user already has this pokemon"}, 403)
 
     try {
         await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: randomNumber })
