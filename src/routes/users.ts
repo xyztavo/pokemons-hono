@@ -22,11 +22,11 @@ export const userRoute = new Hono<{ Bindings: Env }>()
 const newUserSchema = z.object({
     name: z.string().min(5, {
         message: "min of 5 characters to name"
-    }),
+    }).max(20, { message: "max username characters is 20"}),
     email: z.string().email({ message: "email not valid" }),
     password: z.string().min(5, {
         message: "min of 5 characters to password"
-    })
+    }).max(30, { message: "max password characters is 30"})
 })
 
 userRoute.post('/', zValidator('json', newUserSchema), async (c) => {
