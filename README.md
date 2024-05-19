@@ -88,3 +88,5 @@ db:seed
 - [x] if pokemons return exacts to a integer ex: /pokemon?query=ra&pageIndex=2 the maxPages is going to hallucinate
 - [x] when pokemon has typelist with more than 1 type, it takes the limit from pokemon, so maxPages isnt working 
 - [x] pokemons query on users not working
+- [ ] db push not working, to adress it should use db:generate then take the sql and inject it using turso cli. 
+- [ ] db studio not working. should be fixed by either drizzlekit team or hrana client, same for db:push

@@ -1,9 +1,10 @@
 {
   "scripts": {
+    "test": "vitest",
     "dev": "wrangler dev src/index.ts",
     "deploy": "wrangler deploy --minify src/index.ts",
-    "db:generate": "drizzle-kit generate:sqlite",
-    "db:push": "drizzle-kit push:sqlite",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed/seed.ts"
   },
@@ -23,7 +24,8 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240403.0",
-    "drizzle-kit": "^0.20.17",
+    "drizzle-kit": "^0.21.1",
+    "vitest": "^1.6.0",
     "wrangler": "^3.53.1"
   }
 }

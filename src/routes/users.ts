@@ -195,6 +195,8 @@ userRoute.put('/pokemon/random', auth, async (c) => {
         return randomNumber;
     }
     const excluded = results.map((e) => e.user_pokemons.pokemonsId);
+    // const excluded = results.map((e) => e.user_pokemons.pokemonsId) as number[] // to fix type issue at line 201;
+
 
     const randomNumber = getRandomNumberExcluding(1, 649, excluded);
 
