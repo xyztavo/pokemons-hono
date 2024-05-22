@@ -24,7 +24,6 @@ async function seed() {
 
     const pokemonsTypelistFormatted = getPokemonsTypelistFormated
 
-
     await db.insert(pokemons).values(pokemonsFormated)
     await db.insert(typeList).values(typeListFormated)
     await db.insert(pokemonsTypelist).values(pokemonsTypelistFormatted)

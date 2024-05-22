@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { buildTursoClient } from "../db/db";
-import { Env } from "../types/env";
-import { pokemons, pokemonsTypelist, typeList, userPokemons, users } from "../db/schema";
+import { buildTursoClient } from "../../db/db";
+import { Env } from "../../types/env";
+import { pokemons, pokemonsTypelist, typeList } from "../../db/schema";
 import { count, eq, gt, sql, inArray, asc } from "drizzle-orm";
-import { PokemonGroup } from "./pokemon.types";
+import { PokemonGroup } from "../../types/pokemon-group";
 
 export const pokemonRoute = new Hono<{ Bindings: Env }>()
 

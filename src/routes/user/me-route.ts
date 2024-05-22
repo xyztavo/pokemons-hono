@@ -1,35 +1,32 @@
 import { Hono } from 'hono'
-import { buildTursoClient } from "../db/db";
-import { Env } from '../types/env';
-import { userPokemons, users, pokemons, pokemonsTypelist, typeList } from '../db/schema';
+import { buildTursoClient } from "../../db/db";
+import { Env } from '../../types/env';
+import { userPokemons, users, pokemons, pokemonsTypelist, typeList } from '../../db/schema';
 import bcrypt from 'bcryptjs'
 import { sign } from 'hono/jwt';
 import { sql, eq, inArray, count, gt, and, asc } from 'drizzle-orm';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator'
-import { auth } from '../middlewares/auth';
+import { auth } from '../../middlewares/auth';
 import { nanoid } from 'nanoid';
-import { getIdFromToken } from '../utils/getIdFromToken';
-import { mergePokemonsFromResult } from './pokemon';
+import { getIdFromToken } from '../../utils/getIdFromToken';
+import { mergePokemonsFromResult } from '../pokemon/pokemon-route';
 
-
-export const userRoute = new Hono<{ Bindings: Env }>()
-
-
-
+export const meRoute = new Hono<{ Bindings: Env }>()
 
 // Create User
 const newUserSchema = z.object({
     name: z.string().min(5, {
         message: "min of 5 characters to name"
-    }).max(20, { message: "max username characters is 20"}),
+    }).max(20, { message: "max username characters is 15" }),
     email: z.string().email({ message: "email not valid" }),
     password: z.string().min(5, {
         message: "min of 5 characters to password"
-    }).max(30, { message: "max password characters is 30"})
+    }).max(30, { message: "max password characters is 30" })
 })
 
-userRoute.post('/', zValidator('json', newUserSchema), async (c) => {
+
+meRoute.post('/', zValidator('json', newUserSchema), async (c) => {
     const { email, password, name } = await c.req.json()
 
     const db = buildTursoClient(c.env)
@@ -46,7 +43,7 @@ userRoute.post('/', zValidator('json', newUserSchema), async (c) => {
 })
 
 // Login User
-userRoute.post('/login', async (c) => {
+meRoute.post('/login', async (c) => {
     const db = buildTursoClient(c.env)
     const { email, password } = await c.req.json()
 
@@ -67,41 +64,24 @@ userRoute.post('/login', async (c) => {
     return c.json({ message: "logged in!", token }, 200)
 })
 
-// Update User
-const updateUserSchema = z.object({
-    name: z.string().min(5, {
-        message: "min of 5 characters to name"
-    }),
-})
-
-userRoute.put('/profile', auth, zValidator('json', updateUserSchema), async (c) => {
-    const { name } = await c.req.json()
-    const db = buildTursoClient(c.env)
-    const idFromToken = getIdFromToken(c)
-
-
-    const updatedUser = await db.update(users).set({ name }).where(sql`${users.id} = ${idFromToken}`).returning({ users })
-    return c.json({ updatedUser }, 200)
-})
 
 
 
 // Get user
-userRoute.get('/profile', auth, async (c) => {
+meRoute.get('/', auth, async (c) => {
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
 
     try {
-        const results = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(eq(users.id, idFromToken))
-        return c.json({ user: results[0] })
+        const results = await db.select({ user: users, pokemonsCount: count(userPokemons) }).from(users).where(eq(users.id, idFromToken)).innerJoin(userPokemons, eq(userPokemons.userId, users.id))
+        return c.json({ username: results[0].user.name, createdAt: results[0].user.createdAt, pokemonsCount: results[0].pokemonsCount })
     } catch (error) {
         return c.json({ message: "user not found" }, 404)
     }
-
 })
 
 // get user pokemons
-userRoute.get('/pokemon', auth, async (c) => {
+meRoute.get('/pokemon', auth, async (c) => {
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
     const { pageIndex, query } = c.req.query()
@@ -109,45 +89,51 @@ userRoute.get('/pokemon', auth, async (c) => {
     const maxResults = 20
     const page = Number(pageIndex) * maxResults
 
+    try {
+        const pokemonsResults = await
+            db.select()
+                .from(users)
+                .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
+                .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
+                .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)))
+                .orderBy(pokemons.id, asc(pokemons.id))
+                .limit(maxResults)
+                .offset(page)
 
-    const pokemonsResults = await
-        db.select()
+        const pokemonsWithTypelist = await
+            db.select()
+                .from(pokemonsTypelist)
+                .innerJoin(typeList, eq(typeList.id, pokemonsTypelist.typeId))
+                .where(inArray(pokemonsTypelist.pokemonId, pokemonsResults.map(m => m.pokemons.id.toString())));
+
+        const pokemonsCount = await db
+            .select({ count: count(pokemons) })
             .from(users)
             .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
             .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
-            .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)))
-            .orderBy(pokemons.id, asc(pokemons.id))
-            .limit(maxResults)
-            .offset(page)
+            .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)));
 
-    const pokemonsWithTypelist = await
-        db.select()
-            .from(pokemonsTypelist)
-            .innerJoin(typeList, eq(typeList.id, pokemonsTypelist.typeId))
-            .where(inArray(pokemonsTypelist.pokemonId, pokemonsResults.map(m => m.pokemons.id.toString())));
+        if (pokemonsCount.length < 1) return c.json({ message: "no pokemons found" }, 404)
 
-    const pokemonsCount = await db
-        .select({ count: count(pokemons) })
-        .from(users)
-        .innerJoin(userPokemons, eq(users.id, userPokemons.userId))
-        .innerJoin(pokemons, eq(userPokemons.pokemonsId, pokemons.id))
-        .where(and(eq(users.id, idFromToken), query ? sql`${pokemons.name} LIKE ${'%' + query + '%'}` : gt(pokemons.id, 0)));
+        const maxPokemons = Math.floor(pokemonsCount[0].count)
 
-    if (pokemonsCount.length < 1) return c.json({ message: "no pokemons found" }, 404)
+        // TODO : figure out why i have to do a minus 1 right here
+        const maxPages = Math.floor(maxPokemons / maxResults)
 
-    const maxPokemons = Math.floor(pokemonsCount[0].count)
+        return c.json({ user: pokemonsResults[0].user.name, totalCount: pokemonsCount[0].count, pageIndex: Number(pageIndex), maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
 
-    // TODO : figure out why i have to do a minus 1 right here
-    const maxPages = Math.floor(maxPokemons / maxResults)
-
-    return c.json({ user: pokemonsResults[0].user.name, totalCount: pokemonsCount[0].count, pageIndex: Number(pageIndex), maxPages, pokemons: mergePokemonsFromResult(pokemonsResults.map(m => m.pokemons), pokemonsWithTypelist) })
+    } catch (error) {
+        return c.json({ message: `User got no pokemons` }, 400)
+    }
 })
+
+
 
 // add pokemon to user
 const addPokemonToUserBody = z.object({
     pokemonId: z.number()
 })
-userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async (c) => {
+meRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async (c) => {
     const { pokemonId } = await c.req.json()
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
@@ -176,7 +162,7 @@ userRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async 
 
 })
 
-userRoute.put('/pokemon/random', auth, async (c) => {
+meRoute.put('/pokemon/random', auth, async (c) => {
     const idFromToken = getIdFromToken(c)
     const db = buildTursoClient(c.env)
 
@@ -187,7 +173,7 @@ userRoute.put('/pokemon/random', auth, async (c) => {
             .where(eq(users.id, idFromToken))
 
 
-    function getRandomNumberExcluding(min: number, max: number, excluded: number[]) {
+    function getRandomNumberExcluding(min: number, max: number, excluded: (number | null)[]) {
         let randomNumber;
         do {
             randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -195,15 +181,8 @@ userRoute.put('/pokemon/random', auth, async (c) => {
         return randomNumber;
     }
     const excluded = results.map((e) => e.user_pokemons.pokemonsId);
-    // const excluded = results.map((e) => e.user_pokemons.pokemonsId) as number[] // to fix type issue at line 201;
-
 
     const randomNumber = getRandomNumberExcluding(1, 649, excluded);
-
-    //    // check if user already has pokemon
-    //    const existingUserPokemonQuery = await db.select().from(users).innerJoin(userPokemons, eq(userPokemons.userId, users.id)).where(eq(users.id, idFromToken))
-    //    const existingUserPokemonId = existingUserPokemonQuery[0].user_pokemons.pokemonsId
-    //    if (existingUserPokemonId == randomNumber) return c.json({ message: "user already has this pokemon"}, 403)
 
     try {
         await db.insert(userPokemons).values({ userId: idFromToken, pokemonsId: randomNumber })
