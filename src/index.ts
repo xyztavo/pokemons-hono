@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { meRoute } from './routes/user/me-route'
+import { meRoute } from './routes/me/me-route'
 import { pokemonRoute } from './routes/pokemon/pokemon-route'
 import { cors } from 'hono/cors'
 import { usersRoute } from './routes/users/users-route'

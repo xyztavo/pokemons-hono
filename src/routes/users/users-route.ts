@@ -8,7 +8,7 @@ import { mergePokemonsFromResult } from "../pokemon/pokemon-route"
 export const usersRoute = new Hono<{ Bindings: Env }>()
 
 // get basic profile user info
-usersRoute.get('/:username/', async (c) => {
+usersRoute.get('/:username', async (c) => {
     const db = buildTursoClient(c.env)
     const username = c.req.param("username")
 
