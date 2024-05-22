@@ -81,7 +81,7 @@ meRoute.get('/', auth, async (c) => {
 })
 
 // get user pokemons
-meRoute.get('/pokemon', auth, async (c) => {
+meRoute.get('/pokemons', auth, async (c) => {
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
     const { pageIndex, query } = c.req.query()
@@ -133,7 +133,7 @@ meRoute.get('/pokemon', auth, async (c) => {
 const addPokemonToUserBody = z.object({
     pokemonId: z.number()
 })
-meRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async (c) => {
+meRoute.put('/pokemons', auth, zValidator('json', addPokemonToUserBody), async (c) => {
     const { pokemonId } = await c.req.json()
     const db = buildTursoClient(c.env)
     const idFromToken = getIdFromToken(c)
@@ -162,7 +162,7 @@ meRoute.put('/pokemon', auth, zValidator('json', addPokemonToUserBody), async (c
 
 })
 
-meRoute.put('/pokemon/random', auth, async (c) => {
+meRoute.put('/pokemons/random', auth, async (c) => {
     const idFromToken = getIdFromToken(c)
     const db = buildTursoClient(c.env)
 
