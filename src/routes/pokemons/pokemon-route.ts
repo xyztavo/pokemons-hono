@@ -5,7 +5,7 @@ import { pokemons, pokemonsTypelist, typeList } from "../../db/schema";
 import { count, eq, gt, sql, inArray, asc } from "drizzle-orm";
 import { PokemonGroup } from "../../types/pokemon-group";
 
-export const pokemonRoute = new Hono<{ Bindings: Env }>()
+export const pokemonsRoute = new Hono<{ Bindings: Env }>()
 
 export const mergePokemonsFromResult = (
     pokemons: {
@@ -29,7 +29,7 @@ export const mergePokemonsFromResult = (
     }))
 }
 
-pokemonRoute.get('/', async (c) => {
+pokemonsRoute.get('/', async (c) => {
     const db = buildTursoClient(c.env)
     const { pageIndex, query } = c.req.query()
 

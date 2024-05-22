@@ -3,7 +3,7 @@ import { Env } from "../../types/env"
 import { buildTursoClient } from "../../db/db"
 import { pokemons, pokemonsTypelist, typeList, userPokemons, users } from "../../db/schema"
 import { asc, eq, gt, sql, and, inArray, count } from "drizzle-orm"
-import { mergePokemonsFromResult } from "../pokemon/pokemon-route"
+import { mergePokemonsFromResult } from "../pokemons/pokemon-route"
 
 export const usersRoute = new Hono<{ Bindings: Env }>()
 

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { meRoute } from './routes/me/me-route'
-import { pokemonRoute } from './routes/pokemon/pokemon-route'
+import { pokemonsRoute } from './routes/pokemons/pokemon-route'
 import { cors } from 'hono/cors'
 import { usersRoute } from './routes/users/users-route'
 
@@ -32,6 +32,6 @@ app.route('/me', meRoute)
 app.route('/users', usersRoute)
 
 // Route to get global pokemon info
-app.route('/pokemon', pokemonRoute)
+app.route('/pokemons', pokemonsRoute)
 
 export default app

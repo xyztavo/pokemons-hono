@@ -10,7 +10,7 @@ import { zValidator } from '@hono/zod-validator'
 import { auth } from '../../middlewares/auth';
 import { nanoid } from 'nanoid';
 import { getIdFromToken } from '../../utils/getIdFromToken';
-import { mergePokemonsFromResult } from '../pokemon/pokemon-route';
+import { mergePokemonsFromResult } from '../pokemons/pokemon-route';
 
 export const meRoute = new Hono<{ Bindings: Env }>()
 
