@@ -4,11 +4,11 @@ import { pokemonsRoute } from './routes/pokemons/pokemon-route'
 import { cors } from 'hono/cors'
 import { usersRoute } from './routes/users/users-route'
 
-
 const app = new Hono()
 // Allow local testing and production CORS 
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://pokedoro-next.vercel.app'],
+    origin: ['http://localhost:3000'],
+    // origin: ['https://pokedoro.vercel.app'], /* in PROD it should be this */
     allowHeaders: ['Authorization', 'Content-Type', 'Upgrade-Insecure-Requests'],
     allowMethods: ['POST', 'GET', 'OPTIONS', 'PUT'],
     exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],

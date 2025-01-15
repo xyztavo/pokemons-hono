@@ -26,6 +26,6 @@
     "@cloudflare/workers-types": "^4.20240403.0",
     "drizzle-kit": "^0.21.1",
     "vitest": "^1.6.0",
-    "wrangler": "^3.53.1"
+    "wrangler": "^3.102.0"
   }
 }
